@@ -5,6 +5,12 @@ namespace Rarst\Meadow;
  * Augment native template hierarchy with non-PHP template processing.
  */
 class Template_Hierarchy {
+    
+    private $all_dirs;
+
+    function __construct( $all_dirs = array() ) {
+        $this->all_dirs = $all_dirs;
+    }
 
 	public $template_types = array(
 		'404',
@@ -167,7 +173,10 @@ class Template_Hierarchy {
 				$templates = array( "{$type}.twig" );
 		}
 
-		$template = locate_template( $templates );
+        // find templates in all registered dirs if given, otherwise fallback to WP `locate_template`
+        $template = ! empty( $this->all_dirs ) 
+            ? $this->findTemplates( $templates ) 
+            : locate_template( $templates );
 
 		if ( empty( $template ) ) {
 			$template = $fallback;
@@ -175,4 +184,27 @@ class Template_Hierarchy {
 
 		return apply_filters( 'meadow_query_template', $template, $type );
 	}
+    
+    public function findTemplates( Array $templates ) {
+        $located = FALSE;
+        while ( empty( $located ) && ! empty( $templates ) ) {
+            $template = array_shift( $templates );
+            $located = $this->findTemplate( $template );
+        }
+        return $located;
+    }
+
+    private function findTemplate( $template ) {
+        if ( empty( $template ) || ! is_string( $template ) ) {
+            return;
+        }
+        // loop ALL registered dirs, so if file is no found in theme/stylesheet folder
+        // is searched in custom registeed folders
+        foreach ( $this->all_dirs as $dir ) {
+            $path = trailingslashit( $dir ) . trim( $template, ' /\\' );
+            if ( file_exists( $path ) ) {
+                return trim( $template, '\\/' );
+            }
+        }
+    }
 }

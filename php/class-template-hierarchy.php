@@ -79,6 +79,12 @@ class Template_Hierarchy {
 	public function query_template( $fallback ) {
 
 		$type      = substr( current_filter(), 0, - 9 ); // trim '_template' from end
+        
+        // if `$fallback` is already a twig file, stop do anithing, just filter and return
+        if ( pathinfo( $fallback, PATHINFO_EXTENSION ) === 'twig' ) {
+            return apply_filters( 'meadow_query_template', basename( $fallback ), $type );
+        }
+        
 		$templates = array();
 
 		switch ( $type ) {

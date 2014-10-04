@@ -14,32 +14,30 @@ class Core extends \Pimple {
 
 		$defaults['twig.options']     = array();
 		$defaults['twig.directories'] = array();
+        
+        $defaults['all_directories'] = function($meadow) {
+            $stylesheet_dir  = get_stylesheet_directory();
+            $template_dir    = get_template_directory();
+            $calculated_dirs = array(
+                $stylesheet_dir,
+                $template_dir,
+                plugin_dir_path( __DIR__ ) . 'twig',
+            );
 
-		$defaults['twig.loader'] = function ( $meadow ) {
-
-			// this needs to be lazy or theme switchers and alike explode it
-
-			$stylesheet_dir  = get_stylesheet_directory();
-			$template_dir    = get_template_directory();
-			$calculated_dirs = array(
-				$stylesheet_dir,
-				$template_dir,
-				plugin_dir_path( __DIR__ ) . 'twig',
-			);
-
-			// enables explicit inheritance from parent theme in child
-			if ( $stylesheet_dir !== $template_dir ) {
-				$calculated_dirs[] = dirname( $template_dir );
-			}
-
-			$directories = array_unique(
-				array_merge(
-					$calculated_dirs,
-					$meadow['twig.directories']
-				)
-			);
-
-			return new \Twig_Loader_Filesystem( $directories );
+            // enables explicit inheritance from parent theme in child
+            if ( $stylesheet_dir !== $template_dir ) {
+                $calculated_dirs[] = dirname( $template_dir );
+            }
+            return new \ArrayObject( array_unique(
+                array_merge(
+                    $calculated_dirs,
+                    $meadow['twig.directories']
+                )
+            ) );
+        };
+        
+		$defaults['twig.loader'] = function ($meadow) {
+			return new \Twig_Loader_Filesystem( $meadow['all_directories']->getArrayCopy() );
 		};
 
 		$defaults['twig.undefined_function'] = array( __CLASS__, 'undefined_function' );
@@ -61,8 +59,8 @@ class Core extends \Pimple {
 			return $environment;
 		};
 
-		$defaults['hierarchy'] = function () {
-			return new Template_Hierarchy();
+		$defaults['hierarchy'] = function ($meadow) {
+			return new Template_Hierarchy( $meadow['all_directories']->getArrayCopy() );
 		};
 
 		parent::__construct( array_merge( $defaults, $values ) );

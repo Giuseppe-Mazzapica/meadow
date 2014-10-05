@@ -181,7 +181,7 @@ class Template_Hierarchy {
 
         // find templates in all registered dirs if given, otherwise fallback to WP `locate_template`
         $template = ! empty( $this->all_dirs ) 
-            ? $this->findTemplates( $templates ) 
+            ? $this->locate_template( $templates ) 
             : locate_template( $templates );
 
 		if ( empty( $template ) ) {
@@ -191,16 +191,16 @@ class Template_Hierarchy {
 		return apply_filters( 'meadow_query_template', $template, $type );
 	}
     
-    public function findTemplates( Array $templates ) {
+    public function locate_template( Array $templates ) {
         $located = FALSE;
         while ( empty( $located ) && ! empty( $templates ) ) {
             $template = array_shift( $templates );
-            $located = $this->findTemplate( $template );
+            $located = $this->locate_template_file( $template );
         }
         return $located;
     }
 
-    private function findTemplate( $template ) {
+    private function locate_template_file( $template ) {
         if ( empty( $template ) || ! is_string( $template ) ) {
             return;
         }

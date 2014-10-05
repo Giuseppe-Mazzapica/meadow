@@ -105,7 +105,7 @@ class Template_Hierarchy {
 				break;
 
 			case 'home':
-				$templates = array( 'home.twig' );
+				$templates = array( 'home.twig', 'index.twig' );
 				break;
 
 			case 'single':
@@ -178,14 +178,11 @@ class Template_Hierarchy {
 			default:
 				$templates = array( "{$type}.twig" );
 		}
-        
-        // use index.twig as fallback for all templates, just like in WordPress
-        $templates[] = 'index.twig';
 
         // find templates in all registered dirs if given, otherwise fallback to WP `locate_template`
         $template = ! empty( $this->all_dirs ) 
-            ? $this->findTemplates( array_unique( $templates ) ) 
-            : locate_template( array_unique( $templates ) );
+            ? $this->findTemplates( $templates ) 
+            : locate_template( $templates );
 
 		if ( empty( $template ) ) {
 			$template = $fallback;
